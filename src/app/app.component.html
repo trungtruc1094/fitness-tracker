@@ -1,14 +1,33 @@
 <mat-sidenav-container>
-    <mat-sidenav role="navigation" #sideNav>Sidenav content</mat-sidenav>
+    <mat-sidenav role="navigation" #sideNav>
+        <mat-nav-list>
+            <a mat-list-item router-link="/signup" (click)="sideNav.close()">
+                <mat-icon>face</mat-icon>
+                <span class="nav-caption">Signup</span>
+            </a>
+            <a mat-list-item router-link="/signup">
+                <mat-icon>input</mat-icon>
+                <span class="nav-caption">Login</span>
+            </a>
+            <a mat-list-item router-link="/signup">
+                <mat-icon>fitness_center</mat-icon>
+                <span class="nav-caption">Training</span>
+            </a>
+            <mat-list-item>
+                <mat-icon>build</mat-icon>
+                <span class="nav-caption">Training</span>
+            </mat-list-item>
+        </mat-nav-list>
+    </mat-sidenav>
     <mat-sidenav-content>
         <!-- <button (click)="sideNav.toggle()">Show Nav</button> -->
         <mat-toolbar color="primary">
-            <div><button mat-icon-button (click)="sideNav.toggle()">
-                <mat-icon>menu</mat-icon>
-            </button></div>
+            <div fxHide.gt-xs><button mat-icon-button (click)="sideNav.toggle()">
+                    <mat-icon>menu</mat-icon>
+                </button></div>
             <div><a routerLink="/">Logo</a></div>
-            <div fxFlex fxLayout fxLayoutAlign="flex-end">
-                <ul fxLayout fxLayoutGap="10px" class="navigation-items"> 
+            <div fxFlex fxLayout fxLayoutAlign="flex-end" fxHide.xs>
+                <ul fxLayout fxLayoutGap="10px" class="navigation-items">
                     <li>
                         <a routerLink="/signup">Sign Up</a>
                     </li>
