@@ -3,7 +3,9 @@
     <mat-sidenav-content>
         <!-- <button (click)="sideNav.toggle()">Show Nav</button> -->
         <mat-toolbar color="primary">
-            <div><button (click)="sideNav.toggle()">Toggle Sidenav</button></div>
+            <div><button mat-icon-button (click)="sideNav.toggle()">
+                <mat-icon>menu</mat-icon>
+            </button></div>
             <div>Logo</div>
             <div>
                 <a routerLink="/signup">Sign Up</a>
