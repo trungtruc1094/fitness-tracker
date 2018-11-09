@@ -8,6 +8,8 @@ import { AngularFireModule } from "@angular/fire";
 import { AngularFirestoreModule } from "@angular/fire/firestore";
 import { AngularFireAuthModule } from "@angular/fire/auth";
 
+import { LocalStorageModule } from "angular-2-local-storage";
+
 import { AppComponent } from "./app.component";
 import { MaterialModule } from "./material.module";
 import { SignupComponent } from "./auth/signup/signup.component";
@@ -25,6 +27,7 @@ import { StopTrainingComponent } from "./training/current-training/stop-training
 import { AuthService } from "./auth/auth.service";
 import { TrainingService } from "./training/training.service";
 import { environment } from "src/environments/environment";
+import { UIService } from "./shared/ui.service";
 
 @NgModule({
   declarations: [
@@ -49,9 +52,13 @@ import { environment } from "src/environments/environment";
     FormsModule,
     AngularFireModule.initializeApp(environment.firebase),
     AngularFirestoreModule,
-    AngularFireAuthModule
+    AngularFireAuthModule,
+    LocalStorageModule.withConfig({
+      prefix: "fitness-app",
+      storageType: "localStorage"
+    })
   ],
-  providers: [AuthService, TrainingService],
+  providers: [AuthService, TrainingService, UIService],
   bootstrap: [AppComponent],
   entryComponents: [StopTrainingComponent]
 })

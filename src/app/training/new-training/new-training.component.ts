@@ -8,6 +8,7 @@ import {
   AngularFirestore,
   AngularFirestoreCollection
 } from "@angular/fire/firestore";
+import { UIService } from "src/app/shared/ui.service";
 
 // export interface ExerciseId extends Exercise {
 //   id: string;
@@ -19,6 +20,8 @@ import {
   styleUrls: ["./new-training.component.css"]
 })
 export class NewTrainingComponent implements OnInit, OnDestroy {
+  isLoading = false;
+  private loadingSubs: Subscription;
   // private exerciseCollection: AngularFirestoreCollection<Exercise>;
   exercises: Exercise[];
   exerciseSubscription: Subscription;
@@ -28,16 +31,21 @@ export class NewTrainingComponent implements OnInit, OnDestroy {
 
   constructor(
     private trainingService: TrainingService,
-    private db: AngularFirestore
+    private db: AngularFirestore,
+    private uiSerivce: UIService
   ) {}
 
   ngOnInit() {
-    this.trainingService.fetchAvailableExercises();
+    this.loadingSubs = this.uiSerivce.loadingStateChanges.subscribe(result => {
+      this.isLoading = result;
+    });
     this.exerciseSubscription = this.trainingService.exercisesChanged.subscribe(
       exercises => {
         this.exercises = exercises;
       }
     );
+
+    this.fetchExercises();
   }
 
   startTraining(form: NgForm) {
@@ -46,7 +54,12 @@ export class NewTrainingComponent implements OnInit, OnDestroy {
     this.trainingService.startExercise(form.value.selectedExercise);
   }
 
+  fetchExercises() {
+    this.trainingService.fetchAvailableExercises();
+  }
+
   ngOnDestroy() {
     this.exerciseSubscription.unsubscribe();
+    this.loadingSubs.unsubscribe();
   }
 }

@@ -6,64 +6,110 @@ import { Injectable } from "@angular/core";
 import { AngularFireAuth } from "@angular/fire/auth";
 import { TrainingService } from "../training/training.service";
 
+import { LocalStorageService } from "angular-2-local-storage";
+import { UIService } from "../shared/ui.service";
+// import { BehaviorSubject, ReplaySubject } from "rxjs";
+
 @Injectable()
 export class AuthService {
   authChange = new Subject<boolean>();
   private user: User;
-  private isAuthenticated = false;
+
+  private token: String = "";
+  private current_user: any;
 
   constructor(
     private router: Router,
     private afAuth: AngularFireAuth,
-    private trainingService: TrainingService
+    private trainingService: TrainingService,
+    private localStorageService: LocalStorageService,
+    private uiService: UIService
   ) {}
 
+  initAuthListener() {
+    this.afAuth.authState.subscribe(user => {
+      if (user) {
+        this.authChange.next(true);
+        this.router.navigate(["/training"]);
+      } else {
+        this.trainingService.cancelSubscriptions();
+        this.authChange.next(false);
+        this.router.navigate(["/login"]);
+      }
+    });
+  }
+
   registerUser(authData: AuthData) {
+    this.uiService.loadingStateChanges.next(true);
     this.afAuth.auth
       .createUserWithEmailAndPassword(authData.email, authData.password)
       .then(result => {
-        console.log(result);
-        this.authSuccessfully();
-        this.isAuthenticated = true;
+        this.uiService.loadingStateChanges.next(false);
+        // Save to local storage
+        const currentUserToken = this.afAuth.auth.currentUser.getIdToken();
+        this.localStorageService.set("isLoggedIn", true);
+        this.localStorageService.set("token", currentUserToken);
+        this.localStorageService.set(
+          "current_user",
+          this.afAuth.auth.currentUser
+        );
       })
       .catch(error => {
-        console.log(error);
+        this.uiService.loadingStateChanges.next(false);
+        this.uiService.showSnackBar(error.message, null, 3000);
       });
   }
 
   login(authData: AuthData) {
+    this.uiService.loadingStateChanges.next(true);
     this.afAuth.auth
       .signInWithEmailAndPassword(authData.email, authData.password)
       .then(result => {
-        console.log(result);
-        this.authSuccessfully();
-        this.isAuthenticated = true;
+        this.uiService.loadingStateChanges.next(false);
+        // Save to local storage
+        const currentUserToken = JSON.parse(
+          JSON.stringify(this.afAuth.auth.currentUser)
+        ).stsTokenManager.accessToken;
+        // console.log("currentUserToken", currentUserToken);
+        this.localStorageService.set("isLoggedIn", true);
+        this.localStorageService.set("token", currentUserToken);
+        this.localStorageService.set(
+          "current_user",
+          this.afAuth.auth.currentUser
+        );
       })
       .catch(error => {
-        console.log(error);
+        this.uiService.loadingStateChanges.next(false);
+        this.uiService.showSnackBar(error.message, null, 3000);
       });
   }
 
   logout() {
-    this.trainingService.getExerciseSubscriptions().forEach(ex => {
-      ex.unsubscribe();
-    });
     this.afAuth.auth.signOut();
-    this.isAuthenticated = false;
-    this.authChange.next(false);
-    this.router.navigate(["/login"]);
+
+    // Remove current user & token
+    this.token = "";
+    this.current_user = "";
+    // Remove current user & token from local
+    this.localStorageService.set("isLoggedIn", false);
+    this.localStorageService.remove("token", "current_user");
   }
 
   getUser() {
-    return { ...this.user };
+    return { ...this.current_user };
   }
 
   isAuth() {
-    return this.isAuthenticated;
-  }
-
-  private authSuccessfully() {
-    this.authChange.next(true);
-    this.router.navigate(["/training"]);
+    if (this.localStorageService.get("isLoggedIn")) {
+      if (this.localStorageService.get("current_user")) {
+        this.current_user = this.localStorageService.get("current_user");
+      }
+      if (this.localStorageService.get("token")) {
+        this.token = this.localStorageService.get("token").toString();
+      }
+      return true;
+    } else {
+      return false;
+    }
   }
 }
