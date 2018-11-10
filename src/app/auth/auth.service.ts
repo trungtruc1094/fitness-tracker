@@ -15,8 +15,8 @@ export class AuthService {
   authChange = new Subject<boolean>();
   private user: User;
 
-  private token: String = "";
-  private current_user: any;
+  token: String = "";
+  current_user: any;
 
   constructor(
     private router: Router,
