@@ -5,14 +5,19 @@ import { Router } from "@angular/router";
 import { Injectable } from "@angular/core";
 import { AngularFireAuth } from "@angular/fire/auth";
 import { TrainingService } from "../training/training.service";
+import { Store } from '@ngrx/store';
 
 import { LocalStorageService } from "angular-2-local-storage";
 import { UIService } from "../shared/ui.service";
+import * as fromRoot from '../app.reducer';
+
+import * as UI from '../shared/ui.actions';
+import * as Auth from '../auth/auth.actions';
 // import { BehaviorSubject, ReplaySubject } from "rxjs";
 
 @Injectable()
 export class AuthService {
-  authChange = new Subject<boolean>();
+  // authChange = new Subject<boolean>();
   private user: User;
 
   token: String = "";
@@ -23,28 +28,33 @@ export class AuthService {
     private afAuth: AngularFireAuth,
     private trainingService: TrainingService,
     private localStorageService: LocalStorageService,
-    private uiService: UIService
+    private uiService: UIService,
+    private store: Store<fromRoot.State>
   ) {}
 
   initAuthListener() {
     this.afAuth.authState.subscribe(user => {
       if (user) {
-        this.authChange.next(true);
+        // this.authChange.next(true);
+        this.store.dispatch(new Auth.Authenticated());
         this.router.navigate(["/training"]);
       } else {
         this.trainingService.cancelSubscriptions();
-        this.authChange.next(false);
+        // this.authChange.next(false);
+        this.store.dispatch(new Auth.Unauthenticated());
         this.router.navigate(["/login"]);
       }
     });
   }
 
   registerUser(authData: AuthData) {
-    this.uiService.loadingStateChanges.next(true);
+    // this.uiService.loadingStateChanges.next(true);
+    this.store.dispatch(new UI.StartLoading());
     this.afAuth.auth
       .createUserWithEmailAndPassword(authData.email, authData.password)
       .then(result => {
-        this.uiService.loadingStateChanges.next(false);
+        // this.uiService.loadingStateChanges.next(false);
+        this.store.dispatch(new UI.StopLoading());
         // Save to local storage
         const currentUserToken = this.afAuth.auth.currentUser.getIdToken();
         this.localStorageService.set("isLoggedIn", true);
@@ -55,17 +65,20 @@ export class AuthService {
         );
       })
       .catch(error => {
-        this.uiService.loadingStateChanges.next(false);
+        // this.uiService.loadingStateChanges.next(false);
+        this.store.dispatch(new UI.StopLoading());
         this.uiService.showSnackBar(error.message, null, 3000);
       });
   }
 
   login(authData: AuthData) {
-    this.uiService.loadingStateChanges.next(true);
+    // this.uiService.loadingStateChanges.next(true);
+    this.store.dispatch(new UI.StartLoading());
     this.afAuth.auth
       .signInWithEmailAndPassword(authData.email, authData.password)
       .then(result => {
-        this.uiService.loadingStateChanges.next(false);
+        // this.uiService.loadingStateChanges.next(false);
+        this.store.dispatch(new UI.StopLoading());
         // Save to local storage
         const currentUserToken = JSON.parse(
           JSON.stringify(this.afAuth.auth.currentUser)
@@ -79,7 +92,8 @@ export class AuthService {
         );
       })
       .catch(error => {
-        this.uiService.loadingStateChanges.next(false);
+        // this.uiService.loadingStateChanges.next(false);
+        this.store.dispatch(new UI.StopLoading());
         this.uiService.showSnackBar(error.message, null, 3000);
       });
   }

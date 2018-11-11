@@ -3,17 +3,15 @@ import { NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { FlexLayoutModule } from "@angular/flex-layout";
+import { MaterialModule } from "./material.module";
 
 import { AngularFireModule } from "@angular/fire";
 import { AngularFirestoreModule } from "@angular/fire/firestore";
-
 import { LocalStorageModule } from "angular-2-local-storage";
+import { StoreModule } from '@ngrx/store';
 
 import { AppComponent } from "./app.component";
-import { MaterialModule } from "./material.module";
-
 import { StopTrainingComponent } from "./training/current-training/stop-training.component";
-
 import { WelcomeComponent } from "./welcome/welcome.component";
 import { AppRoutingModule } from "./app-routing.module";
 import { SidenavListComponent } from "./navigation/sidenav-list/sidenav-list.component";
@@ -26,6 +24,7 @@ import { UIService } from "./shared/ui.service";
 
 import { AuthModule } from "./auth/auth.module";
 import { TrainingModule } from "./training/training.module";
+import { reducers } from './app.reducer';
 
 @NgModule({
   declarations: [
@@ -47,7 +46,8 @@ import { TrainingModule } from "./training/training.module";
       storageType: "localStorage"
     }),
     AuthModule,
-    AngularFirestoreModule
+    AngularFirestoreModule,
+    StoreModule.forRoot(reducers)
   ],
   providers: [AuthService, TrainingService, UIService],
   bootstrap: [AppComponent],

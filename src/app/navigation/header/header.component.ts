@@ -8,20 +8,24 @@ import {
 import { Subscription } from "rxjs/Subscription";
 
 import { AuthService } from "../../auth/auth.service";
+import * as fromRoot from '../../app.reducer';
+import { Store } from "@ngrx/store";
+import { Observable } from "rxjs";
 
 @Component({
   selector: "app-header",
   templateUrl: "./header.component.html",
   styleUrls: ["./header.component.css"]
 })
-export class HeaderComponent implements OnInit, OnDestroy {
+export class HeaderComponent implements OnInit{
   @Output()
   toggleSidenav = new EventEmitter<void>();
 
   isAuth = false;
-  authSubscription: Subscription;
+  isAuth$: Observable<boolean>;
+  // authSubscription: Subscription;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private store: Store<fromRoot.State>) {}
 
   ngOnInit() {
     if (this.authService.isAuth()) {
@@ -30,9 +34,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.isAuth = false;
     }
 
-    this.authSubscription = this.authService.authChange.subscribe(result => {
-      this.isAuth = result;
-    });
+    this.isAuth$ = this.store.select(fromRoot.getIsAuthenticated);
   }
 
   onToggleSidenav() {
@@ -41,11 +43,5 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   logout() {
     this.authService.logout();
-  }
-
-  ngOnDestroy() {
-    if (this.authSubscription) {
-      this.authSubscription.unsubscribe();
-    }
   }
 }
