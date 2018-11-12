@@ -2,13 +2,13 @@ import { Subject } from "rxjs/Subject";
 import { Exercise } from "./exercise.model";
 import { Injectable } from "@angular/core";
 import { AngularFirestore } from "@angular/fire/firestore";
-import { map } from "rxjs/operators";
+import { map, take } from "rxjs/operators";
 import { Subscription } from "rxjs";
 import { UIService } from "../shared/ui.service";
 import { Store } from "@ngrx/store";
 
-import * as Training from './training.actions';
-import * as fromTraining from './training.reducer';
+import * as Training from "./training.actions";
+import * as fromTraining from "./training.reducer";
 
 @Injectable()
 export class TrainingService {
@@ -25,7 +25,11 @@ export class TrainingService {
 
   private exSubscriptions: Subscription[] = [];
 
-  constructor(private db: AngularFirestore, private uiService: UIService, private store: Store<fromTraining.State>) {}
+  constructor(
+    private db: AngularFirestore,
+    private uiService: UIService,
+    private store: Store<fromTraining.State>
+  ) {}
 
   fetchAvailableExercises() {
     this.uiService.loadingStateChanges.next(true);
@@ -82,29 +86,39 @@ export class TrainingService {
   }
 
   completeExercise() {
-    this.addDataToDatabase({
-      ...this.runningExercise,
-      date: new Date(),
-      state: "completed"
-    });
-    this.runningExercise = null;
+    this.store
+      .select(fromTraining.getStartExercise)
+      .pipe(take(1))
+      .subscribe(ex => {
+        this.addDataToDatabase({
+          ...ex,
+          date: new Date(),
+          state: "completed"
+        });
+        console.log("Complete: ", ex);
+        // this.runningExercise = null;
+      });
     // this.exerciseChanged.next(null);
     this.store.dispatch(new Training.StopExercise());
-    console.log("Complete: ", this.exercises);
   }
 
   cancelExercise(progress: number) {
-    this.addDataToDatabase({
-      ...this.runningExercise,
-      duration: this.runningExercise.duration * (progress / 100),
-      calories: this.runningExercise.duration * (progress / 100),
-      date: new Date(),
-      state: "cancelled"
-    });
-    this.runningExercise = null;
+    this.store
+      .select(fromTraining.getStartExercise)
+      .pipe(take(1))
+      .subscribe(ex => {
+        this.addDataToDatabase({
+          ...ex,
+          duration: ex.duration * (progress / 100),
+          calories: ex.duration * (progress / 100),
+          date: new Date(),
+          state: "cancelled"
+        });
+        console.log("Cancel: ", ex);
+        // this.runningExercise = null;
+      });
     // this.exerciseChanged.next(null);
     this.store.dispatch(new Training.StopExercise());
-    console.log("Cancel: ", this.exercises);
   }
 
   fetchCompletedAndCancelledExercises() {
